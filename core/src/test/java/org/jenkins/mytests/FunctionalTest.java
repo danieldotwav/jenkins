@@ -12,8 +12,7 @@ import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
 import hudson.security.pages.SignupPage;
 import jenkins.model.Jenkins;
-import org.htmlunit.html.HtmlButton;
-import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -93,6 +92,128 @@ public class FunctionalTest {
 
         // Also verify that the list of users is now empty
         assertEquals(0, securityRealm.getAllUsers().size());
+    }
+
+    @Test // 2.5 Covers: Settings Cog -> Delete User -> Confirm Deletion
+    public void deleteUserThroughSettings() throws Exception {
+        // Use a security realm that allows user signup
+        HudsonPrivateSecurityRealm securityRealm = new HudsonPrivateSecurityRealm(true, false, null);
+        j.jenkins.setSecurityRealm(securityRealm);
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        // First, sign up a new user
+        SignupPage signup = new SignupPage(wc.goTo("signup"));
+        signup.enterUsername("deleteTestThroughSettingsUser");
+        signup.enterPassword("12345");
+        signup.enterFullName("Delete TestUser ThroughSettings");
+
+        // Submit the sign-up form
+        HtmlPage success = signup.submit(j);
+
+        // Verify that the user was created successfully by checking the main-panel and the user's display name
+        assertThat(success.getElementById("main-panel").getTextContent(), containsString("Success"));
+        assertEquals("Delete TestUser ThroughSettings", securityRealm.getUser("deleteTestThroughSettingsUser").getDisplayName());
+
+        // Now, find the settings link for created user and click on it to navigate there
+        HtmlAnchor settingsLink = (HtmlAnchor) success.getFirstByXPath("//a[contains(@href, 'user/user1/')]");
+        HtmlPage settingsPage = settingsLink.click();
+
+        //find the delete button on the settings page
+        HtmlAnchor deleteButton = (HtmlAnchor) settingsPage.getFirstByXPath("//a[@data-url='user/user1/doDelete']");
+        HtmlPage deleted = deleteButton.click();
+
+        // Verify that the user is no longer in the security realm (should return null)
+        assertEquals(null, securityRealm.getUser("deleteTestThroughSettingsUser"));
+
+        // Also verify that the list of users is now empty
+        assertEquals(0, securityRealm.getAllUsers().size());
+    }
+
+    @Test // 2.6 Covers: Settings Cog -> Delete User -> cancel deletion, back button
+    public void cancelDeletionReturnToList() throws Exception {
+        // Use a security realm that allows user signup
+        HudsonPrivateSecurityRealm securityRealm = new HudsonPrivateSecurityRealm(true, false, null);
+        j.jenkins.setSecurityRealm(securityRealm);
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        // First, sign up a new user
+        SignupPage signup = new SignupPage(wc.goTo("signup"));
+        signup.enterUsername("notDeletingUser");
+        signup.enterPassword("12345");
+        signup.enterFullName("notDeleting User");
+
+        // Submit the sign-up form
+        HtmlPage success = signup.submit(j);
+
+        // Verify that the user was created successfully by checking the main-panel and the user's display name
+        assertThat(success.getElementById("main-panel").getTextContent(), containsString("Success"));
+        assertEquals("notDeleting User", securityRealm.getUser("notDeletingUser").getDisplayName());
+
+        // Now, find the settings link for created user and click on it to navigate there
+        HtmlAnchor settingsLink = (HtmlAnchor) success.getFirstByXPath("//a[contains(@href, 'user/user1/')]");
+        HtmlPage settingsPage = settingsLink.click();
+
+        //find the delete button on the settings page
+        HtmlAnchor deleteButton = (HtmlAnchor) settingsPage.getFirstByXPath("//a[@data-url='user/user1/doDelete']");
+        HtmlPage deleted = deleteButton.click();
+
+        //cancel button click
+        HtmlButton cancelButton = (HtmlButton) settingsPage.getFirstByXPath("//button[@data-id='cancel']");
+        cancelButton.click();
+
+        //basically the back button
+        HtmlAnchor jenkinsUserDatabaseLink = (HtmlAnchor) settingsPage.getFirstByXPath("//a[text()='Jenkins' own user database']");
+        HtmlPage listUsersWebpage = jenkinsUserDatabaseLink.click();
+        j.waitUntilNoActivity();
+
+        // Confirm we are back on the List Users page
+        String mainPanelText = listUsersWebpage.getElementById("main-panel").getTextContent();
+        assertThat(mainPanelText, containsString("Users"));
+
+        // Verify user still exists
+        assertNotNull("User should still exist if deletion was canceled.", securityRealm.getUser("cancelDeleteUser"));
+    }
+
+    @Test // 2.7 Covers: userid button -> user settings -> edit settings (name) -> apply
+    public void updateUserThroughUserID() throws Exception {
+        // Use a security realm that allows user signup
+        HudsonPrivateSecurityRealm securityRealm = new HudsonPrivateSecurityRealm(true, false, null);
+        j.jenkins.setSecurityRealm(securityRealm);
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        // First, sign up a new user
+        SignupPage signup = new SignupPage(wc.goTo("signup"));
+        signup.enterUsername("updateUser");
+        signup.enterPassword("12345");
+        signup.enterFullName("update User");
+
+        // Submit the sign-up form
+        HtmlPage success = signup.submit(j);
+
+        // Verify that the user was created successfully by checking the main-panel and the user's display name
+        assertThat(success.getElementById("main-panel").getTextContent(), containsString("Success"));
+        assertEquals("update User", securityRealm.getUser("updateUser").getDisplayName());
+
+        // Now, find the settings link for created user through the userID link and click on it to navigate there
+        HtmlAnchor userIDSettingsLink = (HtmlAnchor) success.getFirstByXPath("//a[contains(@href, 'user/user1/') and contains(@class, 'jenkins-table__link')]");
+        HtmlPage settingsPage = userIDSettingsLink.click();
+
+        //find the account button on the settings page
+        HtmlSpan accountLink = (HtmlSpan) settingsPage.getFirstByXPath("//span[contains(@class, 'task-link-text') and text()='Account']");
+        accountLink.click();
+
+        //find the input field to change the name
+        HtmlInput usernameInput = (HtmlInput) settingsPage.getFirstByXPath("//input[@name='_.fullName']");
+        //set new username in input field
+        usernameInput.setValueAttribute("newFullName");
+
+        //click apply (apply and save look the same??)
+        HtmlButton applyButton = (HtmlButton) settingsPage.getFirstByXPath("//button[@name='Apply']");
+        applyButton.click();
+
+        // Verify that the user is in the security realm with new name (not sure if this assertion is correctly formatted)
+        assertEquals("newFullName", securityRealm.getUser("deleteTestThroughSettingsUser"));
+
     }
 
     @Test // 3. Covers: Add User -> Invalid Username
