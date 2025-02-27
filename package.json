@@ -59,8 +59,7 @@
     "lodash": "4.17.21",
     "sortablejs": "1.15.6",
     "tippy.js": "6.3.7",
-    "window-handle": "1.0.1",
-    "@parcel/watcher": "^2.5.0"
+    "window-handle": "1.0.1"
   },
   "browserslist": [
     "defaults",
