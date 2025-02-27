@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main  # Trigger on push to 'main' branch
+      - master  # Trigger on push to 'master' branch
   pull_request:
     branches:
-      - main  # Trigger on pull request targeting 'main' branch
+      - master  # Trigger on pull request targeting 'master' branch
 
 jobs:
   build-and-test:
