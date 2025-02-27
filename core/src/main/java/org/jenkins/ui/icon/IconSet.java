@@ -149,7 +149,9 @@ public class IconSet {
 
         if (icon == NO_ICON) {
             return null;
-        } else if (icon != null) {
+        }
+
+        if (icon != null) {
             return icon;
         }
 
