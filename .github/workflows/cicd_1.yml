@@ -26,7 +26,6 @@ jobs:
 
       - name: Install Corepack (for Yarn and pnpm management)
         run: |
-            curl -fsSL https://sh.rustup.rs | sh  # Optional: if you need Rust for building
             corepack enable  # Enable Corepack, which can manage Yarn or pnpm
 
       - name: Install Yarn (via Corepack)
