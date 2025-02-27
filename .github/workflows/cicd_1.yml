@@ -28,8 +28,8 @@ jobs:
         run: |
             corepack enable  # Enable Corepack, which can manage Yarn or pnpm
 
-      - name: Install Yarn (via Corepack)
-        run: corepack prepare yarn@stable --activate  # Ensures that Corepack installs the latest Yarn
+#      - name: Install Yarn (via Corepack)
+#        run: corepack prepare yarn@stable --activate  # Ensures that Corepack installs the latest Yarn
 
 
       - name: Build with Maven
