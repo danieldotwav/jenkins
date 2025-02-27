@@ -24,6 +24,15 @@ jobs:
           java-version: 17
           cache: "maven"
 
+      - name: Install Corepack (for Yarn and pnpm management)
+        run: |
+            curl -fsSL https://sh.rustup.rs | sh  # Optional: if you need Rust for building
+            corepack enable  # Enable Corepack, which can manage Yarn or pnpm
+
+      - name: Install Yarn (via Corepack)
+        run: corepack prepare yarn@stable --activate  # Ensures that Corepack installs the latest Yarn
+
+
       - name: Build with Maven
         run: mvn clean install -DskipTests -Dspotbugs.skip=true
 
