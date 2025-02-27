@@ -195,6 +195,7 @@ public class SearchTestImproved {
         assertNotNull(item2);
         assertEquals("/url2", item2.getUrl());
 
+<<<<<<< Updated upstream
         // Verify the item added through subBuilder: add(SearchIndexBuilder index)
 //        SuggestedItem item3 = Search.find(index, "subBuilderName");
 //        assertNotNull(item3);
@@ -202,6 +203,15 @@ public class SearchTestImproved {
 
         // Also, confirm that the nested child item from dummy object's SearchIndex is discoverable
         // Note: It should be located at "/dummy/child"
+=======
+//        // Verify the item added through subBuilder: add(SearchIndexBuilder index)
+//        SuggestedItem item3 = Search.find(index, "subBuilderName");
+//        assertNotNull(item3);
+//        assertEquals("/subBuilderUrl", item3.getUrl());
+//
+//        // Also, confirm that the nested child item from dummy object's SearchIndex is discoverable
+//        // Note: It should be located at "/dummy/child"
+>>>>>>> Stashed changes
 //        SuggestedItem item4 = Search.find(index, "child");
 //        assertNotNull(item4);
 //        assertEquals("/dummy/child", item4.getUrl());
