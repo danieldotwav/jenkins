@@ -1,6 +1,7 @@
 package hudson.search;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import hudson.Util;
 import java.util.ArrayList;
@@ -88,15 +89,6 @@ public class SearchTestImproved {
     }
 
     // --------------------- New coverage ---------------------
-
-    @Test
-    public void deadCode() {
-        boolean ans = false;
-
-        if (ans) {
-           System.out.println("This will never happen");
-        }
-    }
 
     // Covers all the overloads of SearchIndexBuilder to improve branch and line coverage
     @Test

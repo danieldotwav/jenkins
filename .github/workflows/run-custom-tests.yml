@@ -22,3 +22,4 @@ jobs:
 
       - name: Run custom test suites
         run: mvn clean test -Dtest=FunctionalTest
+        build: mvn clean install -DskipTests -Dspotbugs.skip=true
