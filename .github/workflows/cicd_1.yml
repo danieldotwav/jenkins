@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - temp_master  # Trigger on push to 'master' branch
+      - temp_master # Trigger on push to 'master' branch
   pull_request:
     branches:
-      - temp_master  # Trigger on pull request targeting 'master' branch
+      - temp_master # Trigger on pull request targeting 'master' branch
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest  # Use GitHub's hosted Ubuntu runner
+    runs-on: ubuntu-latest # Use GitHub's hosted Ubuntu runner
 
     steps:
       - name: Checkout code
@@ -26,11 +26,10 @@ jobs:
 
       - name: Install Corepack (for Yarn and pnpm management)
         run: |
-            corepack enable  # Enable Corepack, which can manage Yarn or pnpm
+          corepack enable  # Enable Corepack, which can manage Yarn or pnpm
 
       - name: Install Yarn (via Corepack)
-        run: corepack prepare yarn@4.6.0 --activate  # Ensures that Corepack installs the latest Yarn
-
+        run: corepack prepare yarn@4.6.0 --activate # Ensures that Corepack installs the latest Yarn
 
       - name: Build with Maven
         run: mvn clean install -DskipTests -Dspotbugs.skip=true -e

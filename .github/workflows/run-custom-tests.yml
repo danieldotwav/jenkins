@@ -2,9 +2,9 @@ name: Run Custom Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   run-custom-tests:
@@ -17,8 +17,8 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Run custom test suites
         run: mvn clean test -Dtest=FunctionalTest
