@@ -1,6 +1,7 @@
 name: Build and Test #try again
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main  # Trigger on push to 'main' branch
