@@ -158,6 +158,17 @@ public class SlaveComputer extends Computer {
         assert slave.getNumExecutors() != 0 : "Computer created with 0 executors";
     }
 
+    // Overloaded Constructor
+    RewindableRotatingFileOutputStream dummyLog = new RewindableRotatingFileOutputStream(getLogFile(), 10);
+    StreamTaskListener dummyTaskListener = new StreamTaskListener(decorate(dummyLog));
+
+    public SlaveComputer(Slave slave, RewindableRotatingFileOutputStream dummyLog, TaskListener taskListener) {
+        super(slave);
+        this.log = dummyLog;
+        this.taskListener = dummyTaskListener;
+        assert slave.getNumExecutors() != 0 : "Computer created with 0 executors";
+    }
+
     /**
      * Uses {@link ConsoleLogFilter} to decorate logger.
      */
@@ -430,8 +441,8 @@ public class SlaveComputer extends Computer {
                            @CheckForNull OutputStream launchLog,
                            @CheckForNull Channel.Listener listener) throws IOException, InterruptedException {
         ChannelBuilder cb = new ChannelBuilder(nodeName, threadPoolForRemoting)
-            .withMode(Channel.Mode.NEGOTIATE)
-            .withHeaderStream(launchLog);
+                .withMode(Channel.Mode.NEGOTIATE)
+                .withHeaderStream(launchLog);
 
         for (ChannelConfigurator cc : ChannelConfigurator.all()) {
             cc.onChannelBuilding(cb, this);
@@ -667,17 +678,17 @@ public class SlaveComputer extends Computer {
             if (!ALLOW_UNSUPPORTED_REMOTING_VERSIONS) {
                 taskListener.fatalError(
                         "Rejecting the connection because the Remoting version is older than the"
-                            + " minimum required version (%s). To allow the connection anyway, set"
-                            + " the hudson.slaves.SlaveComputer.allowUnsupportedRemotingVersions"
-                            + " system property to true.",
+                                + " minimum required version (%s). To allow the connection anyway, set"
+                                + " the hudson.slaves.SlaveComputer.allowUnsupportedRemotingVersions"
+                                + " system property to true.",
                         RemotingVersionInfo.getMinimumSupportedVersion());
                 disconnect(new OfflineCause.LaunchFailed());
                 return;
             } else {
                 taskListener.error(
                         "The Remoting version is older than the minimum required version (%s)."
-                            + " The connection will be allowed, but compatibility is NOT"
-                            + " guaranteed.",
+                                + " The connection will be allowed, but compatibility is NOT"
+                                + " guaranteed.",
                         RemotingVersionInfo.getMinimumSupportedVersion());
             }
         }
