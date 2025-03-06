@@ -28,22 +28,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
 import hudson.Functions;
-import hudson.model.*;
+import hudson.model.Computer;
+import hudson.model.Node;
+import hudson.model.TaskListener;
+import hudson.model.User;
 import hudson.remoting.Launcher;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
-
-import hudson.util.StreamTaskListener;
-import hudson.util.io.RewindableRotatingFileOutputStream;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
@@ -62,7 +58,6 @@ import org.xml.sax.SAXException;
  * @author suren
  */
 public class SlaveComputerTest {
-    // --------------- Existing Implementation ---------------
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -70,10 +65,10 @@ public class SlaveComputerTest {
     public void testAgentLogs() throws Exception {
         DumbSlave node = j.createOnlineSlave();
         String log = node.getComputer().getLog();
-        assertTrue(log.contains("Remoting version: " + Launcher.VERSION));
-        assertTrue(log.contains("Launcher: " + SimpleCommandLauncher.class.getSimpleName()));
-        assertTrue(log.contains("Communication Protocol: Standard in/out"));
-        assertTrue(log.contains(String.format("This is a %s agent", Functions.isWindows() ? "Windows" : "Unix")));
+        Assert.assertTrue(log.contains("Remoting version: " + Launcher.VERSION));
+        Assert.assertTrue(log.contains("Launcher: " + SimpleCommandLauncher.class.getSimpleName()));
+        Assert.assertTrue(log.contains("Communication Protocol: Standard in/out"));
+        Assert.assertTrue(log.contains(String.format("This is a %s agent", Functions.isWindows() ? "Windows" : "Unix")));
     }
 
     @Test
@@ -118,11 +113,11 @@ public class SlaveComputerTest {
             retries--;
             Thread.sleep(500);
         }
-        assertTrue(retries > 0);
+        Assert.assertTrue(retries > 0);
         Thread.sleep(500);
 
         Assert.assertFalse(nodeA.getComputer().isOffline());
-        assertTrue(nodeA.getComputer().isOnline());
+        Assert.assertTrue(nodeA.getComputer().isOnline());
 
         // Both listeners should fire and not cause the other not to fire.
         Assert.assertEquals(1, IOExceptionOnOnlineListener.onOnlineCount);
@@ -173,12 +168,12 @@ public class SlaveComputerTest {
             retries--;
             Thread.sleep(500);
         }
-        assertTrue(retries > 0);
+        Assert.assertTrue(retries > 0);
         Thread.sleep(500);
 
         Assert.assertEquals(1, ErrorOnOnlineListener.onOnlineCount);
 
-        assertTrue(nodeA.getComputer().isOffline());
+        Assert.assertTrue(nodeA.getComputer().isOffline());
         Assert.assertFalse(nodeA.getComputer().isOnline());
     }
 
@@ -196,6 +191,15 @@ public class SlaveComputerTest {
         }
     }
 
+
+    /**
+     * Get remote path through json api
+     * @param node agent node
+     * @param user the user for webClient
+     * @return remote path
+     * @throws IOException in case of communication problem.
+     * @throws SAXException in case of config format problem.
+     */
     private String getRemoteFS(Node node, String user) throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
         if (user != null) {
@@ -212,51 +216,5 @@ public class SlaveComputerTest {
         } else {
             return pathObj.toString();
         }
-    }
-
-    // --------------- New Implementations: A simple dummy slave that extends Slave ---------------
-
-    private static class DummySlave extends Slave {
-        private final File logFile;
-
-        public DummySlave(String name, File logFile) throws Descriptor.FormException, IOException, Descriptor.FormException {
-            // Use a dummy remote FS and a simple JNLPLauncher.
-            super(name, "dummyRemoteFS", new JNLPLauncher());
-            this.logFile = logFile;
-        }
-    }
-
-    // Test that the dependency injection constructor of SlaveComputer is invoked and the embedded self-test is executed.
-    @Test
-    public void testDependencyInjectionConstructorSelfTest() throws Exception {
-        // Create a temporary file to serve as the log file.
-        File tempLogFile = File.createTempFile("dummy", ".log");
-        tempLogFile.deleteOnExit();
-
-        // Create an instance of our dummy slave.
-        DummySlave dummySlave = new DummySlave("dummySlave", tempLogFile);
-
-        // Create a dummy log stream based on the temporary file.
-        RewindableRotatingFileOutputStream dummyLog =
-                new RewindableRotatingFileOutputStream(tempLogFile, 10);
-
-        // Create a ByteArrayOutputStream to capture the task listener's output
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        TaskListener dummyListener = new StreamTaskListener(baos);
-
-        // Set the system property so that the self-test code is triggered
-        System.setProperty("jenkins.selftest", "true");
-
-        // Invoke the dependency injection constructor
-        SlaveComputer sc = new SlaveComputer(dummySlave, dummyLog, dummyListener);
-
-        // Clear the property to avoid side effects
-        System.clearProperty("jenkins.selftest");
-
-        // Convert the captured output to a string
-        String output = baos.toString("UTF-8");
-
-        // Verify that the self-test message was written to the TaskListener
-        assertThat("Self-test message should be present", output, containsString("Self-test log message"));
     }
 }
