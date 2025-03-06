@@ -158,16 +158,40 @@ public class SlaveComputer extends Computer {
         assert slave.getNumExecutors() != 0 : "Computer created with 0 executors";
     }
 
-    // Overloaded Constructor
-    RewindableRotatingFileOutputStream dummyLog = new RewindableRotatingFileOutputStream(getLogFile(), 10);
-    StreamTaskListener dummyTaskListener = new StreamTaskListener(decorate(dummyLog));
+    // --------------- New Implementations ---------------
 
-    public SlaveComputer(Slave slave, RewindableRotatingFileOutputStream dummyLog, TaskListener taskListener) {
+    // Embedded Test Method For Modified Constructor. NOTE: This is never a good idea to do during production, but it is the most straight-forward way to test the new constructor without breaking other features
+
+    // Modified Constructor with Dependency Injection
+    public SlaveComputer(Slave slave, RewindableRotatingFileOutputStream dummyLog, TaskListener taskListenerParam) {
         super(slave);
         this.log = dummyLog;
-        this.taskListener = dummyTaskListener;
+        this.taskListener = taskListenerParam;
         assert slave.getNumExecutors() != 0 : "Computer created with 0 executors";
+
+        // Debug: print the property value
+        System.out.println("jenkins.selftest = " + System.getProperty("jenkins.selftest"));
+
+        if (Boolean.getBoolean("jenkins.selftest")) {
+            runSelfTest();
+        }
     }
+
+    private void runSelfTest() {
+        try {
+            String testMsg = "Self-test log message";
+
+            // Write to the log via taskListener
+            taskListener.getLogger().println(testMsg);
+
+            // Print to std out to verify it works
+            System.out.println("Embedded self-test executed in SlaveComputer: " + testMsg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --------------- End of New Implementations ---------------
 
     /**
      * Uses {@link ConsoleLogFilter} to decorate logger.
@@ -1109,6 +1133,8 @@ public class SlaveComputer extends Computer {
         }
     }
 
+    private static final Logger LOGGER = logger.getLogger(SlaveComputer.class.getName());
+
     /**
      * Puts the {@link #SLAVE_LOG_HANDLER} into a separate class so that loading this class
      * in JVM doesn't end up loading tons of additional classes.
@@ -1158,7 +1184,7 @@ public class SlaveComputer extends Computer {
         }
 
         private static final long serialVersionUID = 1L;
-        private static final Logger LOGGER = Logger.getLogger("");
+//        private static final Logger LOGGER = Logger.getLogger("");
     }
 
     /**
@@ -1201,6 +1227,4 @@ public class SlaveComputer extends Computer {
 
     // use RingBufferLogHandler class name to configure for backward compatibility
     private static final int DEFAULT_RING_BUFFER_SIZE = SystemProperties.getInteger(RingBufferLogHandler.class.getName() + ".defaultSize", 256);
-
-    private static final Logger LOGGER = Logger.getLogger(SlaveComputer.class.getName());
 }
